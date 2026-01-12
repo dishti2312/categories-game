@@ -17,7 +17,7 @@
   <style>
     :root{
       --bg-image: url("https://i.postimg.cc/Cx2QHSwg/242.jpg");
-      --bg-win-gif: url("https://i.postimg.cc/nL704mdN/congratulations-7600-256.gif");
+      --win-gif-url: "https://i.postimg.cc/4yKLc2V2/congratulations-7600-256-(1).gif";
 
       --gold: #D2B582;
       --gold-dark: #8A6A2C;
@@ -256,18 +256,22 @@
       text-align: center;
     }
 
-    /* ===== GIF overlay (only time we darken) ===== */
+    /* ===== WIN GIF overlay (GIF rendered as <img> so it always animates) ===== */
     .win-overlay{
       position: fixed;
       inset: 0;
       display: none;
       z-index: 20;
-      background:
-        linear-gradient(rgba(0,0,0,.70), rgba(0,0,0,.70)),
-        var(--bg-win-gif) center/cover no-repeat;
+      background: rgba(0,0,0,.70); /* darken ONLY when gif plays */
       animation: fadeIn .18s ease-out;
     }
-    .win-overlay.show{ display: block; }
+    .win-overlay.show{ display: flex; }
+    .win-overlay img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* full canvas */
+      display: block;
+    }
     @keyframes fadeIn { from{ opacity: 0; } to{ opacity: 1; } }
 
     /* Modal backdrops */
@@ -278,7 +282,7 @@
       align-items: center;
       justify-content: center;
       background: rgba(0,0,0,.35);
-      z-index: 30;
+      z-index: 30; /* above win overlay, so gif plays behind modal */
       padding: 18px;
     }
     .modal-backdrop.show{ display: flex; }
@@ -443,8 +447,10 @@
     </div>
   </section>
 
-  <!-- WIN GIF OVERLAY -->
-  <div id="winOverlay" class="win-overlay" aria-hidden="true"></div>
+  <!-- WIN GIF OVERLAY (reliable animation via <img>) -->
+  <div id="winOverlay" class="win-overlay" aria-hidden="true">
+    <img id="winGif" src="https://i.postimg.cc/nL704mdN/congratulations-7600-256.gif" alt="Congratulations" />
+  </div>
 
   <!-- END MODAL (Success/Fail) -->
   <div id="endModalBackdrop" class="modal-backdrop" aria-hidden="true">
@@ -492,7 +498,6 @@
 
   <script>
     // ===== Minimal analytics wrapper (GA4) =====
-    // Uses GA4 gtag if available; no-op otherwise.
     function track(name, props){
       try{
         if (typeof window.gtag === "function"){
@@ -567,8 +572,6 @@
       { category: "Transporters", words: ["Courier", "Pilot", "Captain", "Engineer", "Operator"] },
       { category: "Hobbies", words: ["Photography", "Blogging", "Cycling", "Gardening", "Chess"] }
     ];
-
-    const RANK_BY_X = { 4:"PRODIGY", 3:"GENIUS", 2:"WIZARD", 1:"DETECTIVE", 0:"MASTER" };
 
     // ===== DOM =====
     const startScreen = document.getElementById("startScreen");
@@ -748,6 +751,12 @@
     }
 
     function showWinOverlay(){
+      // force reload the GIF to ensure it animates every time
+      const gif = document.getElementById("winGif");
+      if (gif){
+        const base = gif.src.split("?")[0];
+        gif.src = base + "?v=" + Date.now();
+      }
       winOverlay.classList.add("show");
       winOverlay.setAttribute("aria-hidden", "false");
     }
@@ -772,7 +781,6 @@
     }
 
     function goToStart(){
-      // close everything and reset view
       closeEndModal();
       closeInfoModal();
       hideWinOverlay();
@@ -781,7 +789,6 @@
       gameScreen.classList.add("hidden");
       startScreen.classList.remove("hidden");
 
-      // Reset game state lightly (so replay is clean)
       session = null;
       lastOutcome = null;
       guessInput.value = "";
@@ -887,7 +894,6 @@
 
     makeMyOwnBtn.addEventListener("click", () => {
       track("Make My Own Game Clicked", { outcome: lastOutcome || "unknown" });
-      // navigation handled by <a>
     });
 
     // Close -> open Info modal (different for success vs fail)
@@ -900,10 +906,9 @@
     // Info modal actions
     checkoutManualBtn.addEventListener("click", () => {
       track("Checkout Manual Clicked", { outcome: lastOutcome || "unknown" });
-      // navigation handled by <a>
     });
 
-    // UPDATED: "No, not for me" returns to START screen
+    // "No, not for me" returns to START screen
     noThanksBtn.addEventListener("click", () => {
       track("No Thanks Clicked", { outcome: lastOutcome || "unknown" });
       goToStart();
@@ -912,7 +917,6 @@
     // Clicking backdrops
     endModalBackdrop.addEventListener("click", (e) => {
       if (e.target === endModalBackdrop){
-        // Treat as Close -> open info modal
         track("End Modal Backdrop Clicked", { outcome: lastOutcome || "unknown" });
         closeEndModal();
         openInfoModal(lastOutcome === "success" ? "success" : "fail");
@@ -934,7 +938,6 @@
           return;
         }
         if (endModalBackdrop.classList.contains("show")){
-          // Escape on end modal behaves like Close (open info modal)
           track("End Modal Esc Pressed", { outcome: lastOutcome || "unknown" });
           closeEndModal();
           openInfoModal(lastOutcome === "success" ? "success" : "fail");
@@ -945,9 +948,9 @@
     track("Visited Game");
 
     /*
-      GIF speed note:
-      Standard web APIs can't reliably slow a remote GIF to 0.75x.
-      If you provide a slowed GIF or an MP4/WebM, we can set playbackRate=0.75 exactly.
+      Note on 0.75x GIF speed:
+      You can't reliably slow a remote GIF via CSS/JS.
+      If you convert it to MP4/WebM, you can set playbackRate = 0.75 exactly.
     */
   </script>
 </body>

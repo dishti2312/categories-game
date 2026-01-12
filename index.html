@@ -5,9 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Categories</title>
 
-  <!-- Option A Tracking (Plausible) -->
-  <!-- Replace YOUR_DOMAIN_HERE with your GitHub Pages domain, e.g. username.github.io -->
-  <script defer data-domain="YOUR_DOMAIN_HERE" src="https://plausible.io/js/script.js"></script>
+  <!-- GA4 Tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PG5KL2468P"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-PG5KL2468P');
+  </script>
 
   <style>
     :root{
@@ -486,11 +491,12 @@
   </div>
 
   <script>
-    // ===== Minimal analytics wrapper (Plausible; no-op otherwise) =====
+    // ===== Minimal analytics wrapper (GA4) =====
+    // Uses GA4 gtag if available; no-op otherwise.
     function track(name, props){
       try{
-        if (typeof window.plausible === "function"){
-          window.plausible(name, { props: props || {} });
+        if (typeof window.gtag === "function"){
+          window.gtag("event", name, props || {});
         }
       } catch(e) { /* ignore */ }
     }

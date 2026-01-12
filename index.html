@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Categories</title>
+
+  <!-- Option A Tracking (Plausible) -->
+  <!-- Replace YOUR_DOMAIN_HERE with your GitHub Pages domain, e.g. username.github.io -->
+  <script defer data-domain="YOUR_DOMAIN_HERE" src="https://plausible.io/js/script.js"></script>
+
+  <style>
+    :root{
+      --bg-image: url("https://i.postimg.cc/Cx2QHSwg/242.jpg");
+      --bg-win-gif: url("https://i.postimg.cc/nL704mdN/congratulations-7600-256.gif");
+
+      --gold: #D2B582;
+      --gold-dark: #8A6A2C;
+      --gold-darker: #6F521F;
+
+      --ink: #161616;
+
+      --shadow: 0 14px 34px rgba(0,0,0,.14);
+      --shadow-soft: 0 10px 22px rgba(0,0,0,.10);
+
+      --radius-xl: 22px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+    }
+
+    *{ box-sizing: border-box; }
+    html, body{
+      height: 100%;
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    /* Background image as-is; no wash overlays. */
+    .screen{
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background: var(--bg-image) center/cover no-repeat;
+    }
+
+    .card{
+      width: min(720px, 92vw);
+      background: #ffffff;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      padding: 30px 26px;
+      text-align: center;
+      border: 1px solid rgba(0,0,0,.06);
+    }
+
+    .title-top{
+      font-size: 16px;
+      margin: 0 0 8px 0;
+      color: rgba(0,0,0,.60);
+      letter-spacing: .2px;
+    }
+    .title-main{
+      margin: 0 0 18px 0;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      line-height: 1.05;
+    }
+
+    .btn{
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-weight: 800;
+      cursor: pointer;
+      background: var(--gold-dark);
+      color: #fff;
+      box-shadow: var(--shadow-soft);
+      transition: transform .08s ease, background .15s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn:hover{ background: var(--gold-darker); }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn.secondary{
+      background: transparent;
+      color: var(--gold-dark);
+      border: 1px solid rgba(210,181,130,.9);
+      box-shadow: none;
+    }
+    .btn.secondary:hover{ background: rgba(210,181,130,.14); }
+
+    /* Primary CTA used in end modal: Make My Own Game */
+    .btn.primary-link{
+      background: var(--gold-dark);
+      color: #fff;
+      border: 0;
+    }
+
+    /* Tertiary CTA: Close */
+    .btn.tertiary{
+      background: rgba(0,0,0,.08);
+      color: rgba(0,0,0,.78);
+      border: 1px solid rgba(0,0,0,.10);
+      box-shadow: none;
+    }
+    .btn.tertiary:hover{ background: rgba(0,0,0,.12); }
+
+    .footnote{
+      margin-top: 10px;
+      font-size: 12px;
+      color: rgba(0,0,0,.55);
+      letter-spacing: .02em;
+    }
+
+    /* Rules */
+    .rules h2{
+      margin: 0 0 12px 0;
+      font-size: 20px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+    .rules ul{
+      margin: 0;
+      padding-left: 20px;
+      text-align: left;
+      color: rgba(0,0,0,.72);
+      line-height: 1.6;
+      font-weight: 650;
+    }
+    .rules li{ margin: 8px 0; }
+    .actions-row{
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    /* Game */
+    .game-wrap{
+      width: min(980px, 94vw);
+      display: grid;
+      gap: 14px;
+    }
+
+    .topbar{ position: sticky; top: 10px; z-index: 5; }
+
+    .banner{
+      display: none;
+      background: rgba(0,0,0,.86);
+      color: white;
+      border-radius: 999px;
+      padding: 10px 14px;
+      box-shadow: var(--shadow-soft);
+      width: fit-content;
+      max-width: 100%;
+      margin: 0 auto;
+      font-weight: 800;
+      letter-spacing: .2px;
+      text-align: center;
+    }
+    .banner.show{ display: block; animation: pop .18s ease-out; }
+    @keyframes pop { from{ transform: scale(.98); opacity: .2; } to{ transform: scale(1); opacity: 1; } }
+
+    /* White box containing tiles */
+    .panel{
+      background: #fff;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      border: 1px solid rgba(0,0,0,.06);
+    }
+
+    .tiles{ display: grid; gap: 12px; }
+
+    /* Tiles in gold shades */
+    .tile{
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid rgba(0,0,0,.06);
+      box-shadow: 0 10px 18px rgba(0,0,0,.08);
+      user-select: none;
+      overflow: hidden;
+      color: #1a1a1a;
+      font-weight: 850;
+    }
+
+    .word{
+      font-size: 18px;
+      letter-spacing: .02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .dot{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.22);
+      flex: 0 0 auto;
+      margin-left: 14px;
+    }
+
+    .tile.locked{ opacity: .78; }
+    .tile.locked .word{ opacity: .70; font-weight: 800; }
+
+    .controls{
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      margin-top: 14px;
+    }
+
+    input[type="text"]{
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(0,0,0,.14);
+      background: #fff;
+      outline: none;
+      font-size: 16px;
+      color: var(--ink);
+    }
+    input[type="text"]::placeholder{ color: rgba(0,0,0,.45); }
+    input[type="text"]:focus{
+      border-color: rgba(138,106,44,.55);
+      box-shadow: 0 0 0 4px rgba(210,181,130,.22);
+    }
+
+    .hint{
+      margin: 10px 2px 0 2px;
+      font-size: 13px;
+      color: rgba(0,0,0,.60);
+      text-align: center;
+    }
+
+    /* ===== GIF overlay (only time we darken) ===== */
+    .win-overlay{
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 20;
+      background:
+        linear-gradient(rgba(0,0,0,.70), rgba(0,0,0,.70)),
+        var(--bg-win-gif) center/cover no-repeat;
+      animation: fadeIn .18s ease-out;
+    }
+    .win-overlay.show{ display: block; }
+    @keyframes fadeIn { from{ opacity: 0; } to{ opacity: 1; } }
+
+    /* Modal backdrops */
+    .modal-backdrop{
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,.35);
+      z-index: 30;
+      padding: 18px;
+    }
+    .modal-backdrop.show{ display: flex; }
+
+    /* End modal (success/fail) */
+    .modal{
+      width: min(780px, 94vw);
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 18px 46px rgba(0,0,0,.22);
+      padding: 24px;
+      text-align: center;
+      border: 1px solid rgba(0,0,0,.06);
+      color: var(--ink);
+    }
+    .modal h2{
+      margin: 0 0 8px 0;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: 22px;
+    }
+    .modal p{
+      margin: 0 0 16px 0;
+      color: rgba(0,0,0,.68);
+      font-weight: 750;
+    }
+    .modal .actions{
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .modal .footnote{
+      margin-top: 16px;
+      font-size: 12px;
+      color: rgba(0,0,0,.55);
+    }
+
+    /* Second popup: info modal (manual pitch) */
+    .info-modal{
+      width: min(620px, 94vw);
+      background: rgba(255,255,255,.95);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 18px 46px rgba(0,0,0,.22);
+      padding: 22px 22px 18px 22px;
+      text-align: center;
+      border: 1px solid rgba(0,0,0,.06);
+    }
+
+    .info-image{
+      width: min(210px, 55vw);
+      height: auto;
+      display: block;
+      margin: 2px auto 10px auto;
+      filter: drop-shadow(0 10px 14px rgba(0,0,0,.12));
+    }
+
+    .info-line1{
+      margin: 6px 0 10px 0;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-size: 18px;
+      color: rgba(0,0,0,.86);
+    }
+
+    .info-line2{
+      margin: 0 0 8px 0;
+      font-weight: 750;
+      color: rgba(0,0,0,.70);
+      line-height: 1.35;
+    }
+
+    .info-line3{
+      margin: 0 0 12px 0; /* closer to CTAs */
+      font-weight: 800;
+      color: rgba(0,0,0,.72);
+      line-height: 1.35;
+    }
+
+    .info-actions{
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+      margin-top: 2px;
+    }
+
+    .info-primary{
+      width: min(340px, 90%);
+    }
+
+    /* Secondary text CTA */
+    .text-cta{
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: rgba(0,0,0,.70);
+      font-weight: 800;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 10px;
+      transition: font-weight .12s ease, text-decoration .12s ease, color .12s ease;
+    }
+    .text-cta:hover{
+      text-decoration: underline;
+      font-weight: 950;
+      color: rgba(0,0,0,.84);
+    }
+
+    .hidden{ display:none !important; }
+  </style>
+</head>
+
+<body>
+  <!-- START SCREEN -->
+  <section id="startScreen" class="screen">
+    <div class="card">
+      <p class="title-top">Let&#39;s play</p>
+      <h1 class="title-main">CATEGORIES</h1>
+      <button id="playBtn" class="btn">Play</button>
+      <div class="footnote">*powered by ChatGPT</div>
+    </div>
+  </section>
+
+  <!-- RULES SCREEN -->
+  <section id="rulesScreen" class="screen hidden">
+    <div class="card rules">
+      <h2>Rules</h2>
+      <ul>
+        <li>You will see <b>5 tiles</b> stacked vertically.</li>
+        <li>The first tile reveals a word. Type the <b>category</b> you think it belongs to.</li>
+        <li>You get <b>one guess per tile</b>.</li>
+      </ul>
+
+      <div class="actions-row">
+        <button id="backToStartBtn" class="btn secondary">Back</button>
+        <button id="startGameBtn" class="btn">Start</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <section id="gameScreen" class="screen hidden">
+    <div class="game-wrap">
+      <div class="topbar">
+        <div id="banner" class="banner">Nope, wrong guess! Try again :)</div>
+      </div>
+
+      <div class="panel">
+        <div id="tiles" class="tiles"></div>
+
+        <div class="controls">
+          <input id="guessInput" type="text" placeholder="Type the category and press Enter…" autocomplete="off" />
+          <button id="submitBtn" class="btn">Submit</button>
+        </div>
+
+        <div class="hint">One guess per tile. Wrong guess reveals the next word.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WIN GIF OVERLAY -->
+  <div id="winOverlay" class="win-overlay" aria-hidden="true"></div>
+
+  <!-- END MODAL (Success/Fail) -->
+  <div id="endModalBackdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="endModalTitle">
+      <h2 id="endModalTitle"></h2>
+      <p id="endModalSubtitle"></p>
+
+      <!-- Primary: Make My Own Game | Secondary: Play Again | Tertiary: Close -->
+      <div class="actions">
+        <a id="makeMyOwnBtn"
+           class="btn primary-link"
+           href="https://pwc-my.sharepoint.com/:w:/r/personal/dishti_lnu_pwc_com/Documents/Challenge%20of%20the%20Month_Jan%2726_Make%20Your%20Own%20Game.docx?d=w55d405c612a0480caf2ecdbfb9eff56b&csf=1&web=1&e=wSyVcw"
+           target="_blank" rel="noopener noreferrer">
+          Make My Own Game
+        </a>
+
+        <button id="playAgainBtn" class="btn secondary">Play Again</button>
+        <button id="closeBtn" class="btn tertiary">Close</button>
+      </div>
+
+      <div class="footnote">*powered by ChatGPT</div>
+    </div>
+  </div>
+
+  <!-- INFO MODAL (after Close) -->
+  <div id="infoModalBackdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="info-modal" role="dialog" aria-modal="true" aria-labelledby="infoLine1">
+      <img id="infoImage" class="info-image" alt="" />
+      <div id="infoLine1" class="info-line1"></div>
+      <div id="infoLine2" class="info-line2"></div>
+      <div id="infoLine3" class="info-line3"></div>
+
+      <div class="info-actions">
+        <a id="checkoutManualBtn"
+           class="btn info-primary"
+           href="https://pwc-my.sharepoint.com/:w:/r/personal/dishti_lnu_pwc_com/Documents/Challenge%20of%20the%20Month_Jan%2726_Make%20Your%20Own%20Game.docx?d=w55d405c612a0480caf2ecdbfb9eff56b&csf=1&web=1&e=wSyVcw"
+           target="_blank" rel="noopener noreferrer">
+          Checkout the manual
+        </a>
+
+        <button id="noThanksBtn" class="text-cta">No, not for me</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Minimal analytics wrapper (Plausible; no-op otherwise) =====
+    function track(name, props){
+      try{
+        if (typeof window.plausible === "function"){
+          window.plausible(name, { props: props || {} });
+        }
+      } catch(e) { /* ignore */ }
+    }
+
+    // ===== Category bank =====
+    const BANK = [
+      { category: "Frameworks", words: ["SWOT", "4Ps", "PESTLE", "Porter’s 5 Forces", "MECE"] },
+      { category: "Economics", words: ["Demand", "Supply", "Inflation", "GDP", "Elasticity"] },
+      { category: "Finance", words: ["Revenue", "Profit", "Cost", "Investment", "Interest"] },
+      { category: "Business", words: ["Market", "Brand", "Competition", "Startup", "Monopoly"] },
+      { category: "Technology", words: ["AI", "Internet", "Cloud", "Automation", "Robotics"] },
+      { category: "Data", words: ["Average", "Trend", "Sample", "Correlation", "Bias"] },
+      { category: "Maths", words: ["Algebra", "Calculus", "Probability", "Geometry", "Statistics"] },
+      { category: "Science", words: ["Physics", "Chemistry", "Biology", "Energy", "Matter"] },
+      { category: "Environment", words: ["Climate", "Pollution", "Recycling", "Sustainability", "Biodiversity"] },
+      { category: "Psychology", words: ["Motivation", "Emotion", "Memory", "Stress", "Behavior"] },
+      { category: "Decisions", words: ["Choice", "Risk", "Tradeoff", "Priority", "Consequence"] },
+      { category: "Leadership", words: ["Vision", "Trust", "Influence", "Responsibility", "Accountability"] },
+      { category: "Communication", words: ["Speaking", "Writing", "Listening", "Feedback", "Persuasion"] },
+      { category: "Education", words: ["Curriculum", "Exams", "Learning", "Skills", "Assessment"] },
+      { category: "Society", words: ["Education", "Employment", "Inequality", "Culture", "Globalization"] },
+      { category: "Government", words: ["Policy", "Law", "Tax", "Regulation", "Governance"] },
+      { category: "Geography", words: ["Climate", "Population", "Resources", "Urbanization", "Migration"] },
+      { category: "History", words: ["Revolution", "Empire", "Civilization", "Independence", "War"] },
+      { category: "Media", words: ["News", "Advertising", "Journalism", "Social media", "Broadcasting"] },
+      { category: "Health", words: ["Nutrition", "Exercise", "Immunity", "Disease", "Mental health"] },
+      { category: "Careers", words: ["Engineering", "Medicine", "Business", "Arts", "Research"] },
+      { category: "Work", words: ["Teamwork", "Deadlines", "Productivity", "Discipline", "Ethics"] },
+      { category: "Change", words: ["Growth", "Adaptation", "Innovation", "Transition", "Disruption"] },
+      { category: "Risks", words: ["Financial", "Legal", "Health", "Environmental", "Strategic"] },
+      { category: "Innovation", words: ["Creativity", "Invention", "Research", "Design", "Experimentation"] },
+      { category: "Marketing", words: ["Advertising", "Pricing", "Promotion", "Branding", "Distribution"] },
+      { category: "Money", words: ["Savings", "Spending", "Budget", "Credit", "Debt"] },
+      { category: "Values", words: ["Honesty", "Respect", "Responsibility", "Fairness", "Empathy"] },
+      { category: "Skills", words: ["Analysis", "Communication", "Problem-solving", "Time management", "Collaboration"] },
+      { category: "Outcomes", words: ["Success", "Failure", "Learning", "Improvement", "Delay"] },
+
+      { category: "Fruits", words: ["Pomegranate", "Kiwi", "Papaya", "Pineapple", "Guava"] },
+      { category: "Animals", words: ["Giraffe", "Zebra", "Kangaroo", "Leopard", "Rhino"] },
+      { category: "Colors", words: ["Maroon", "Turquoise", "Violet", "Beige", "Indigo"] },
+      { category: "Countries", words: ["Brazil", "Germany", "Australia", "Canada", "Italy"] },
+      { category: "Cities", words: ["Barcelona", "Sydney", "Berlin", "Toronto", "Singapore"] },
+      { category: "Sports", words: ["Badminton", "Volleyball", "Squash", "Athletics", "Swimming"] },
+      { category: "Vehicles", words: ["Scooter", "Tram", "Yacht", "Helicopter", "Submarine"] },
+      { category: "Food", words: ["Biryani", "Sushi", "Tacos", "Lasagna", "Dumplings"] },
+      { category: "Jobs", words: ["Architect", "Economist", "Journalist", "Designer", "Psychologist"] },
+      { category: "Subjects", words: ["Economics", "Psychology", "Sociology", "Computer Science", "Philosophy"] },
+      { category: "Emotions", words: ["Anxiety", "Pride", "Guilt", "Relief", "Curiosity"] },
+      { category: "Body", words: ["Liver", "Spine", "Kidney", "Lungs", "Brain"] },
+      { category: "Weather", words: ["Humidity", "Fog", "Drizzle", "Hail", "Heatwave"] },
+      { category: "Clothes", words: ["Blazer", "Hoodie", "Scarf", "Kurta", "Sneakers"] },
+      { category: "Electronics", words: ["Router", "Smartwatch", "Console", "Speaker", "Powerbank"] },
+      { category: "Furniture", words: ["Recliner", "Bookshelf", "Dresser", "Stool", "Wardrobe"] },
+      { category: "Transport", words: ["Ferry", "Monorail", "Cablecar", "Highway", "Runway"] },
+      { category: "Places", words: ["Library", "Stadium", "Airport", "Factory", "Museum"] },
+
+      { category: "Money", words: ["Mortgage", "Loan", "Salary", "Savings", "Interest"] },
+
+      { category: "Time", words: ["Deadline", "Schedule", "Era", "Duration", "Interval"] },
+      { category: "Nature", words: ["Glacier", "Volcano", "Desert", "Waterfall", "Reef"] },
+      { category: "House", words: ["Pantry", "Garage", "Attic", "Basement", "Corridor"] },
+      { category: "Actions", words: ["Analyze", "Design", "Organize", "Improve", "Explore"] },
+      { category: "Tools", words: ["Pliers", "Chisel", "Drill", "Saw", "Tape"] },
+      { category: "Materials", words: ["Rubber", "Cement", "Fabric", "Leather", "Steel"] },
+      { category: "Shapes", words: ["Pentagon", "Hexagon", "Sphere", "Cube", "Pyramid"] },
+      { category: "Festivals", words: ["Navratri", "Onam", "Thanksgiving", "Halloween", "Easter"] },
+      { category: "Languages", words: ["Arabic", "German", "Japanese", "Russian", "Korean"] },
+      { category: "Transporters", words: ["Courier", "Pilot", "Captain", "Engineer", "Operator"] },
+      { category: "Hobbies", words: ["Photography", "Blogging", "Cycling", "Gardening", "Chess"] }
+    ];
+
+    const RANK_BY_X = { 4:"PRODIGY", 3:"GENIUS", 2:"WIZARD", 1:"DETECTIVE", 0:"MASTER" };
+
+    // ===== DOM =====
+    const startScreen = document.getElementById("startScreen");
+    const rulesScreen = document.getElementById("rulesScreen");
+    const gameScreen  = document.getElementById("gameScreen");
+
+    const playBtn        = document.getElementById("playBtn");
+    const backToStartBtn = document.getElementById("backToStartBtn");
+    const startGameBtn   = document.getElementById("startGameBtn");
+
+    const tilesEl    = document.getElementById("tiles");
+    const guessInput = document.getElementById("guessInput");
+    const submitBtn  = document.getElementById("submitBtn");
+    const banner     = document.getElementById("banner");
+
+    const winOverlay = document.getElementById("winOverlay");
+
+    // End modal
+    const endModalBackdrop = document.getElementById("endModalBackdrop");
+    const endModalTitle    = document.getElementById("endModalTitle");
+    const endModalSubtitle = document.getElementById("endModalSubtitle");
+    const playAgainBtn     = document.getElementById("playAgainBtn");
+    const closeBtn         = document.getElementById("closeBtn");
+    const makeMyOwnBtn     = document.getElementById("makeMyOwnBtn");
+
+    // Info modal
+    const infoModalBackdrop = document.getElementById("infoModalBackdrop");
+    const infoImage = document.getElementById("infoImage");
+    const infoLine1 = document.getElementById("infoLine1");
+    const infoLine2 = document.getElementById("infoLine2");
+    const infoLine3 = document.getElementById("infoLine3");
+    const checkoutManualBtn = document.getElementById("checkoutManualBtn");
+    const noThanksBtn = document.getElementById("noThanksBtn");
+
+    // ===== State =====
+    let session = null;
+    let lastOutcome = null; // "success" | "fail"
+
+    function randInt(min, maxInclusive){
+      return Math.floor(Math.random() * (maxInclusive - min + 1)) + min;
+    }
+    function shuffle(arr){
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function normalizeGuess(s){
+      let x = (s || "").trim().toLowerCase();
+      x = x.replace(/\s+/g, " ");
+      x = x.replace(/[’']/g, "'");
+      return x;
+    }
+    function normalizeCategory(s){
+      let x = normalizeGuess(s);
+      if (x.endsWith("s")) x = x.slice(0, -1);
+      return x;
+    }
+
+    function pickNewSession(){
+      const picked = BANK[randInt(0, BANK.length - 1)];
+      const words = shuffle(picked.words).slice(0, 5);
+      return { category: picked.category, words, revealedCount: 1, solved: false };
+    }
+
+    // Gold shades for tiles
+    function hexToRgb(hex){
+      const h = hex.replace("#","");
+      const full = h.length === 3 ? h.split("").map(c=>c+c).join("") : h;
+      const n = parseInt(full, 16);
+      return { r: (n>>16)&255, g: (n>>8)&255, b: n&255 };
+    }
+    function mix(a, b, t){ return Math.round(a + (b-a)*t); }
+    function mixRgb(c1, c2, t){
+      return { r: mix(c1.r,c2.r,t), g: mix(c1.g,c2.g,t), b: mix(c1.b,c2.b,t) };
+    }
+    function rgbToCss(c, alpha=1){ return `rgba(${c.r}, ${c.g}, ${c.b}, ${alpha})`; }
+
+    const GOLD = hexToRgb(getComputedStyle(document.documentElement).getPropertyValue("--gold").trim() || "#D2B582");
+    const WHITE = { r:255, g:255, b:255 };
+    const BLACK = { r:0, g:0, b:0 };
+
+    function tileColor(i){
+      const t = i / 4;
+      const darkened = mixRgb(GOLD, BLACK, 0.20);
+      const lightened = mixRgb(GOLD, WHITE, 0.35);
+      const c = mixRgb(darkened, lightened, t);
+      return rgbToCss(c, 0.98);
+    }
+
+    function renderTiles(){
+      tilesEl.innerHTML = "";
+      for (let i = 0; i < 5; i++){
+        const isRevealed = i < session.revealedCount;
+
+        const tile = document.createElement("div");
+        tile.className = "tile" + (isRevealed ? "" : " locked");
+        tile.style.background = tileColor(i);
+
+        const word = document.createElement("div");
+        word.className = "word";
+        word.textContent = isRevealed ? session.words[i] : "—";
+
+        const dot = document.createElement("div");
+        dot.className = "dot";
+
+        tile.appendChild(word);
+        tile.appendChild(dot);
+        tilesEl.appendChild(tile);
+      }
+    }
+
+    function showBanner(){
+      banner.classList.add("show");
+      clearTimeout(showBanner._t);
+      showBanner._t = setTimeout(() => banner.classList.remove("show"), 1400);
+    }
+
+    // ===== End Modal =====
+    function openEndModal({ title, subtitle, outcome }){
+      lastOutcome = outcome;
+      endModalTitle.textContent = title;
+      endModalSubtitle.textContent = subtitle;
+      endModalBackdrop.classList.add("show");
+      endModalBackdrop.setAttribute("aria-hidden", "false");
+      track("End Modal Opened", { outcome: outcome || "unknown" });
+    }
+
+    function closeEndModal(){
+      endModalBackdrop.classList.remove("show");
+      endModalBackdrop.setAttribute("aria-hidden", "true");
+    }
+
+    // ===== Info Modal (after Close) =====
+    const INFO_CONTENT = {
+      success: {
+        img: "https://i.postimg.cc/mkg70Pmr/534d480b-edf1-4150-8ac4-82dfd9897aec-removebg-preview.png",
+        line1: "HEY THERE!",
+        line2: "This game was created entirely using ChatGPT.",
+        line3: "Want the prompts + setup guide?"
+      },
+      fail: {
+        img: "https://i.postimg.cc/fbY7XnVP/4023361-removebg-preview.png",
+        line1: "PLOT YOUR REVENGE!",
+        line2: "Challenge your team with a tougher game—made entirely using ChatGPT.",
+        line3: "Want the prompts + setup guide?"
+      }
+    };
+
+    function openInfoModal(forOutcome){
+      const key = (forOutcome === "success") ? "success" : "fail";
+      const c = INFO_CONTENT[key];
+
+      infoImage.src = c.img;
+      infoImage.alt = key === "success" ? "ChatGPT game note" : "Revenge note";
+      infoLine1.textContent = c.line1;
+      infoLine2.textContent = c.line2;
+      infoLine3.textContent = c.line3;
+
+      infoModalBackdrop.classList.add("show");
+      infoModalBackdrop.setAttribute("aria-hidden", "false");
+      track("Info Modal Opened", { outcome: key });
+    }
+
+    function closeInfoModal(){
+      infoModalBackdrop.classList.remove("show");
+      infoModalBackdrop.setAttribute("aria-hidden", "true");
+    }
+
+    // ===== Win Overlay =====
+    function hideWinOverlay(){
+      winOverlay.classList.remove("show");
+      winOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    function showWinOverlay(){
+      winOverlay.classList.add("show");
+      winOverlay.setAttribute("aria-hidden", "false");
+    }
+
+    function showWinOverlayAndEndModal(rank, xLeft){
+      showWinOverlay();
+      setTimeout(() => {
+        openEndModal({
+          title: `YOU ARE A ${rank}!`,
+          subtitle: `Total Guesses Left: ${xLeft}`,
+          outcome: "success"
+        });
+      }, 700);
+    }
+
+    // ===== Navigation =====
+    function goToRules(){
+      startScreen.classList.add("hidden");
+      gameScreen.classList.add("hidden");
+      rulesScreen.classList.remove("hidden");
+      track("Rules Viewed");
+    }
+
+    function goToStart(){
+      // close everything and reset view
+      closeEndModal();
+      closeInfoModal();
+      hideWinOverlay();
+
+      rulesScreen.classList.add("hidden");
+      gameScreen.classList.add("hidden");
+      startScreen.classList.remove("hidden");
+
+      // Reset game state lightly (so replay is clean)
+      session = null;
+      lastOutcome = null;
+      guessInput.value = "";
+      banner.classList.remove("show");
+
+      track("Returned To Start");
+    }
+
+    function backToStart(){
+      rulesScreen.classList.add("hidden");
+      gameScreen.classList.add("hidden");
+      startScreen.classList.remove("hidden");
+      track("Start Viewed");
+    }
+
+    function startGame(){
+      closeEndModal();
+      closeInfoModal();
+      hideWinOverlay();
+
+      session = pickNewSession();
+      startScreen.classList.add("hidden");
+      rulesScreen.classList.add("hidden");
+      gameScreen.classList.remove("hidden");
+
+      renderTiles();
+      banner.classList.remove("show");
+      guessInput.value = "";
+      guessInput.focus();
+
+      track("Game Started", { category: session.category });
+    }
+
+    function resetGameNewCategory(){
+      closeEndModal();
+      closeInfoModal();
+      hideWinOverlay();
+
+      session = pickNewSession();
+      renderTiles();
+      banner.classList.remove("show");
+      guessInput.value = "";
+      guessInput.focus();
+
+      track("Play Again Clicked", { category: session.category });
+    }
+
+    // ===== Gameplay =====
+    function handleSubmit(){
+      if (!session || session.solved) return;
+
+      const guess = normalizeCategory(guessInput.value);
+      if (!guess){ guessInput.focus(); return; }
+
+      const answer = normalizeCategory(session.category);
+      track("Guess Submitted", { tile: String(session.revealedCount), guess });
+
+      if (guess === answer){
+        session.solved = true;
+        const xLeft = 5 - session.revealedCount;
+        const rank = {4:"PRODIGY",3:"GENIUS",2:"WIZARD",1:"DETECTIVE",0:"MASTER"}[xLeft] || "MASTER";
+        guessInput.blur();
+
+        track("Game Completed (Success)", { category: session.category, guessesUsed: String(session.revealedCount) });
+
+        showWinOverlayAndEndModal(rank, xLeft);
+        return;
+      }
+
+      showBanner();
+      track("Guess Wrong", { tile: String(session.revealedCount) });
+
+      if (session.revealedCount < 5){
+        session.revealedCount += 1;
+        renderTiles();
+        guessInput.value = "";
+        guessInput.focus();
+      } else {
+        guessInput.blur();
+        track("Game Completed (Fail)", { category: session.category });
+
+        openEndModal({
+          title: "BETTER LUCK NEXT TIME!",
+          subtitle: `The category was ${session.category}`,
+          outcome: "fail"
+        });
+      }
+    }
+
+    // ===== Wire events =====
+    playBtn.addEventListener("click", () => { track("Play Clicked"); goToRules(); });
+    backToStartBtn.addEventListener("click", () => { track("Back Clicked"); backToStart(); });
+    startGameBtn.addEventListener("click", () => { track("Start Clicked"); startGame(); });
+
+    submitBtn.addEventListener("click", handleSubmit);
+    guessInput.addEventListener("keydown", (e) => { if (e.key === "Enter") handleSubmit(); });
+
+    // End modal actions
+    playAgainBtn.addEventListener("click", () => {
+      track("End Modal Play Again Clicked", { outcome: lastOutcome || "unknown" });
+      resetGameNewCategory();
+    });
+
+    makeMyOwnBtn.addEventListener("click", () => {
+      track("Make My Own Game Clicked", { outcome: lastOutcome || "unknown" });
+      // navigation handled by <a>
+    });
+
+    // Close -> open Info modal (different for success vs fail)
+    closeBtn.addEventListener("click", () => {
+      track("End Modal Close Clicked", { outcome: lastOutcome || "unknown" });
+      closeEndModal();
+      openInfoModal(lastOutcome === "success" ? "success" : "fail");
+    });
+
+    // Info modal actions
+    checkoutManualBtn.addEventListener("click", () => {
+      track("Checkout Manual Clicked", { outcome: lastOutcome || "unknown" });
+      // navigation handled by <a>
+    });
+
+    // UPDATED: "No, not for me" returns to START screen
+    noThanksBtn.addEventListener("click", () => {
+      track("No Thanks Clicked", { outcome: lastOutcome || "unknown" });
+      goToStart();
+    });
+
+    // Clicking backdrops
+    endModalBackdrop.addEventListener("click", (e) => {
+      if (e.target === endModalBackdrop){
+        // Treat as Close -> open info modal
+        track("End Modal Backdrop Clicked", { outcome: lastOutcome || "unknown" });
+        closeEndModal();
+        openInfoModal(lastOutcome === "success" ? "success" : "fail");
+      }
+    });
+
+    infoModalBackdrop.addEventListener("click", (e) => {
+      if (e.target === infoModalBackdrop){
+        track("Info Modal Backdrop Closed", { outcome: lastOutcome || "unknown" });
+        goToStart();
+      }
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape"){
+        if (infoModalBackdrop.classList.contains("show")){
+          track("Info Modal Esc Closed", { outcome: lastOutcome || "unknown" });
+          goToStart();
+          return;
+        }
+        if (endModalBackdrop.classList.contains("show")){
+          // Escape on end modal behaves like Close (open info modal)
+          track("End Modal Esc Pressed", { outcome: lastOutcome || "unknown" });
+          closeEndModal();
+          openInfoModal(lastOutcome === "success" ? "success" : "fail");
+        }
+      }
+    });
+
+    track("Visited Game");
+
+    /*
+      GIF speed note:
+      Standard web APIs can't reliably slow a remote GIF to 0.75x.
+      If you provide a slowed GIF or an MP4/WebM, we can set playbackRate=0.75 exactly.
+    */
+  </script>
+</body>
+</html>

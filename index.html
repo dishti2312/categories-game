@@ -5,19 +5,20 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Categories</title>
 
-  <!-- GA4 Tracking -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PG5KL2468P"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){ dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-PG5KL2468P');
-  </script>
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-PG5KL2468P"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+
+  gtag('config', 'G-PG5KL2468P');
+</script>
 
   <style>
     :root{
       --bg-image: url("https://i.postimg.cc/Cx2QHSwg/242.jpg");
-      --win-gif-url: "https://i.postimg.cc/4yKLc2V2/congratulations-7600-256-(1).gif";
+      --bg-win-gif: url("https://i.postimg.cc/nL704mdN/congratulations-7600-256.gif");
 
       --gold: #D2B582;
       --gold-dark: #8A6A2C;
@@ -256,22 +257,18 @@
       text-align: center;
     }
 
-    /* ===== WIN GIF overlay (GIF rendered as <img> so it always animates) ===== */
+    /* ===== GIF overlay (only time we darken) ===== */
     .win-overlay{
       position: fixed;
       inset: 0;
       display: none;
       z-index: 20;
-      background: rgba(0,0,0,.70); /* darken ONLY when gif plays */
+      background:
+        linear-gradient(rgba(0,0,0,.70), rgba(0,0,0,.70)),
+        var(--bg-win-gif) center/cover no-repeat;
       animation: fadeIn .18s ease-out;
     }
-    .win-overlay.show{ display: flex; }
-    .win-overlay img{
-      width: 100%;
-      height: 100%;
-      object-fit: cover; /* full canvas */
-      display: block;
-    }
+    .win-overlay.show{ display: block; }
     @keyframes fadeIn { from{ opacity: 0; } to{ opacity: 1; } }
 
     /* Modal backdrops */
@@ -282,7 +279,7 @@
       align-items: center;
       justify-content: center;
       background: rgba(0,0,0,.35);
-      z-index: 30; /* above win overlay, so gif plays behind modal */
+      z-index: 30;
       padding: 18px;
     }
     .modal-backdrop.show{ display: flex; }
@@ -447,10 +444,8 @@
     </div>
   </section>
 
-  <!-- WIN GIF OVERLAY (reliable animation via <img>) -->
-  <div id="winOverlay" class="win-overlay" aria-hidden="true">
-    <img id="winGif" src="https://i.postimg.cc/nL704mdN/congratulations-7600-256.gif" alt="Congratulations" />
-  </div>
+  <!-- WIN GIF OVERLAY -->
+  <div id="winOverlay" class="win-overlay" aria-hidden="true"></div>
 
   <!-- END MODAL (Success/Fail) -->
   <div id="endModalBackdrop" class="modal-backdrop" aria-hidden="true">
@@ -497,11 +492,11 @@
   </div>
 
   <script>
-    // ===== Minimal analytics wrapper (GA4) =====
+    // ===== Minimal analytics wrapper (Plausible; no-op otherwise) =====
     function track(name, props){
       try{
-        if (typeof window.gtag === "function"){
-          window.gtag("event", name, props || {});
+        if (typeof window.plausible === "function"){
+          window.plausible(name, { props: props || {} });
         }
       } catch(e) { /* ignore */ }
     }
@@ -572,6 +567,8 @@
       { category: "Transporters", words: ["Courier", "Pilot", "Captain", "Engineer", "Operator"] },
       { category: "Hobbies", words: ["Photography", "Blogging", "Cycling", "Gardening", "Chess"] }
     ];
+
+    const RANK_BY_X = { 4:"PRODIGY", 3:"GENIUS", 2:"WIZARD", 1:"DETECTIVE", 0:"MASTER" };
 
     // ===== DOM =====
     const startScreen = document.getElementById("startScreen");
@@ -751,12 +748,6 @@
     }
 
     function showWinOverlay(){
-      // force reload the GIF to ensure it animates every time
-      const gif = document.getElementById("winGif");
-      if (gif){
-        const base = gif.src.split("?")[0];
-        gif.src = base + "?v=" + Date.now();
-      }
       winOverlay.classList.add("show");
       winOverlay.setAttribute("aria-hidden", "false");
     }
@@ -781,6 +772,7 @@
     }
 
     function goToStart(){
+      // close everything and reset view
       closeEndModal();
       closeInfoModal();
       hideWinOverlay();
@@ -789,6 +781,7 @@
       gameScreen.classList.add("hidden");
       startScreen.classList.remove("hidden");
 
+      // Reset game state lightly (so replay is clean)
       session = null;
       lastOutcome = null;
       guessInput.value = "";
@@ -894,6 +887,7 @@
 
     makeMyOwnBtn.addEventListener("click", () => {
       track("Make My Own Game Clicked", { outcome: lastOutcome || "unknown" });
+      // navigation handled by <a>
     });
 
     // Close -> open Info modal (different for success vs fail)
@@ -906,9 +900,10 @@
     // Info modal actions
     checkoutManualBtn.addEventListener("click", () => {
       track("Checkout Manual Clicked", { outcome: lastOutcome || "unknown" });
+      // navigation handled by <a>
     });
 
-    // "No, not for me" returns to START screen
+    // UPDATED: "No, not for me" returns to START screen
     noThanksBtn.addEventListener("click", () => {
       track("No Thanks Clicked", { outcome: lastOutcome || "unknown" });
       goToStart();
@@ -917,6 +912,7 @@
     // Clicking backdrops
     endModalBackdrop.addEventListener("click", (e) => {
       if (e.target === endModalBackdrop){
+        // Treat as Close -> open info modal
         track("End Modal Backdrop Clicked", { outcome: lastOutcome || "unknown" });
         closeEndModal();
         openInfoModal(lastOutcome === "success" ? "success" : "fail");
@@ -938,6 +934,7 @@
           return;
         }
         if (endModalBackdrop.classList.contains("show")){
+          // Escape on end modal behaves like Close (open info modal)
           track("End Modal Esc Pressed", { outcome: lastOutcome || "unknown" });
           closeEndModal();
           openInfoModal(lastOutcome === "success" ? "success" : "fail");
@@ -948,9 +945,9 @@
     track("Visited Game");
 
     /*
-      Note on 0.75x GIF speed:
-      You can't reliably slow a remote GIF via CSS/JS.
-      If you convert it to MP4/WebM, you can set playbackRate = 0.75 exactly.
+      GIF speed note:
+      Standard web APIs can't reliably slow a remote GIF to 0.75x.
+      If you provide a slowed GIF or an MP4/WebM, we can set playbackRate=0.75 exactly.
     */
   </script>
 </body>

@@ -6,14 +6,16 @@
   <title>Categories</title>
 
   <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-PG5KL2468P"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){ dataLayer.push(arguments); }
-  gtag('js', new Date());
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PG5KL2468P"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ window.dataLayer.push(arguments); }
+    gtag('js', new Date());
 
-  gtag('config', 'G-PG5KL2468P');
-</script>
+    // Turn on debug_mode temporarily if you want to see events in GA4 DebugView immediately.
+    // Remove debug_mode once validated.
+    gtag('config', 'G-PG5KL2468P', { debug_mode: true });
+  </script>
 
   <style>
     :root{
@@ -492,13 +494,24 @@
   </div>
 
   <script>
-    // ===== Minimal analytics wrapper (Plausible; no-op otherwise) =====
-    function track(name, props){
+    // ===== GA4 tracking wrapper (replaces Plausible) =====
+    // GA4 event names cannot contain spaces or punctuation.
+    function toEventName(name){
+      return String(name || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_ ]/g, "")  // strip punctuation
+        .replace(/\s+/g, "_")         // spaces -> underscores
+        .replace(/^[^a-z]+/, "e_")    // must start with a letter
+        .slice(0, 40);
+    }
+
+    function track(name, params){
       try{
-        if (typeof window.plausible === "function"){
-          window.plausible(name, { props: props || {} });
+        if (typeof window.gtag === "function"){
+          window.gtag("event", toEventName(name), params || {});
         }
-      } catch(e) { /* ignore */ }
+      } catch(e){}
     }
 
     // ===== Category bank =====
@@ -567,8 +580,6 @@
       { category: "Transporters", words: ["Courier", "Pilot", "Captain", "Engineer", "Operator"] },
       { category: "Hobbies", words: ["Photography", "Blogging", "Cycling", "Gardening", "Chess"] }
     ];
-
-    const RANK_BY_X = { 4:"PRODIGY", 3:"GENIUS", 2:"WIZARD", 1:"DETECTIVE", 0:"MASTER" };
 
     // ===== DOM =====
     const startScreen = document.getElementById("startScreen");
@@ -697,7 +708,7 @@
       endModalSubtitle.textContent = subtitle;
       endModalBackdrop.classList.add("show");
       endModalBackdrop.setAttribute("aria-hidden", "false");
-      track("End Modal Opened", { outcome: outcome || "unknown" });
+      track("end_modal_opened", { outcome: outcome || "unknown" });
     }
 
     function closeEndModal(){
@@ -733,7 +744,7 @@
 
       infoModalBackdrop.classList.add("show");
       infoModalBackdrop.setAttribute("aria-hidden", "false");
-      track("Info Modal Opened", { outcome: key });
+      track("info_modal_opened", { outcome: key });
     }
 
     function closeInfoModal(){
@@ -768,11 +779,10 @@
       startScreen.classList.add("hidden");
       gameScreen.classList.add("hidden");
       rulesScreen.classList.remove("hidden");
-      track("Rules Viewed");
+      track("rules_viewed");
     }
 
     function goToStart(){
-      // close everything and reset view
       closeEndModal();
       closeInfoModal();
       hideWinOverlay();
@@ -781,20 +791,19 @@
       gameScreen.classList.add("hidden");
       startScreen.classList.remove("hidden");
 
-      // Reset game state lightly (so replay is clean)
       session = null;
       lastOutcome = null;
       guessInput.value = "";
       banner.classList.remove("show");
 
-      track("Returned To Start");
+      track("returned_to_start");
     }
 
     function backToStart(){
       rulesScreen.classList.add("hidden");
       gameScreen.classList.add("hidden");
       startScreen.classList.remove("hidden");
-      track("Start Viewed");
+      track("start_viewed");
     }
 
     function startGame(){
@@ -812,7 +821,7 @@
       guessInput.value = "";
       guessInput.focus();
 
-      track("Game Started", { category: session.category });
+      track("game_started", { category: session.category });
     }
 
     function resetGameNewCategory(){
@@ -826,7 +835,7 @@
       guessInput.value = "";
       guessInput.focus();
 
-      track("Play Again Clicked", { category: session.category });
+      track("play_again_clicked", { category: session.category });
     }
 
     // ===== Gameplay =====
@@ -837,22 +846,22 @@
       if (!guess){ guessInput.focus(); return; }
 
       const answer = normalizeCategory(session.category);
-      track("Guess Submitted", { tile: String(session.revealedCount), guess });
+      track("guess_submitted", { tile: String(session.revealedCount), guess });
 
       if (guess === answer){
         session.solved = true;
         const xLeft = 5 - session.revealedCount;
-        const rank = {4:"PRODIGY",3:"GENIUS",2:"WIZARD",1:"DETECTIVE",0:"MASTER"}[xLeft] || "MASTER";
+        const rank = ({4:"PRODIGY",3:"GENIUS",2:"WIZARD",1:"DETECTIVE",0:"MASTER"}[xLeft]) || "MASTER";
         guessInput.blur();
 
-        track("Game Completed (Success)", { category: session.category, guessesUsed: String(session.revealedCount) });
+        track("game_complete_success", { category: session.category, guesses_used: String(session.revealedCount) });
 
         showWinOverlayAndEndModal(rank, xLeft);
         return;
       }
 
       showBanner();
-      track("Guess Wrong", { tile: String(session.revealedCount) });
+      track("guess_wrong", { tile: String(session.revealedCount) });
 
       if (session.revealedCount < 5){
         session.revealedCount += 1;
@@ -861,7 +870,7 @@
         guessInput.focus();
       } else {
         guessInput.blur();
-        track("Game Completed (Fail)", { category: session.category });
+        track("game_complete_fail", { category: session.category });
 
         openEndModal({
           title: "BETTER LUCK NEXT TIME!",
@@ -872,48 +881,44 @@
     }
 
     // ===== Wire events =====
-    playBtn.addEventListener("click", () => { track("Play Clicked"); goToRules(); });
-    backToStartBtn.addEventListener("click", () => { track("Back Clicked"); backToStart(); });
-    startGameBtn.addEventListener("click", () => { track("Start Clicked"); startGame(); });
+    playBtn.addEventListener("click", () => { track("play_clicked"); goToRules(); });
+    backToStartBtn.addEventListener("click", () => { track("back_clicked"); backToStart(); });
+    startGameBtn.addEventListener("click", () => { track("start_clicked"); startGame(); });
 
     submitBtn.addEventListener("click", handleSubmit);
     guessInput.addEventListener("keydown", (e) => { if (e.key === "Enter") handleSubmit(); });
 
     // End modal actions
     playAgainBtn.addEventListener("click", () => {
-      track("End Modal Play Again Clicked", { outcome: lastOutcome || "unknown" });
+      track("end_modal_play_again_clicked", { outcome: lastOutcome || "unknown" });
       resetGameNewCategory();
     });
 
     makeMyOwnBtn.addEventListener("click", () => {
-      track("Make My Own Game Clicked", { outcome: lastOutcome || "unknown" });
+      track("make_my_own_game_click", { outcome: lastOutcome || "unknown" });
       // navigation handled by <a>
     });
 
-    // Close -> open Info modal (different for success vs fail)
     closeBtn.addEventListener("click", () => {
-      track("End Modal Close Clicked", { outcome: lastOutcome || "unknown" });
+      track("end_modal_close_clicked", { outcome: lastOutcome || "unknown" });
       closeEndModal();
       openInfoModal(lastOutcome === "success" ? "success" : "fail");
     });
 
-    // Info modal actions
     checkoutManualBtn.addEventListener("click", () => {
-      track("Checkout Manual Clicked", { outcome: lastOutcome || "unknown" });
+      track("checkout_manual_click", { outcome: lastOutcome || "unknown" });
       // navigation handled by <a>
     });
 
-    // UPDATED: "No, not for me" returns to START screen
     noThanksBtn.addEventListener("click", () => {
-      track("No Thanks Clicked", { outcome: lastOutcome || "unknown" });
+      track("no_thanks_click", { outcome: lastOutcome || "unknown" });
       goToStart();
     });
 
     // Clicking backdrops
     endModalBackdrop.addEventListener("click", (e) => {
       if (e.target === endModalBackdrop){
-        // Treat as Close -> open info modal
-        track("End Modal Backdrop Clicked", { outcome: lastOutcome || "unknown" });
+        track("end_modal_backdrop_click", { outcome: lastOutcome || "unknown" });
         closeEndModal();
         openInfoModal(lastOutcome === "success" ? "success" : "fail");
       }
@@ -921,7 +926,7 @@
 
     infoModalBackdrop.addEventListener("click", (e) => {
       if (e.target === infoModalBackdrop){
-        track("Info Modal Backdrop Closed", { outcome: lastOutcome || "unknown" });
+        track("info_modal_backdrop_close", { outcome: lastOutcome || "unknown" });
         goToStart();
       }
     });
@@ -929,26 +934,20 @@
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape"){
         if (infoModalBackdrop.classList.contains("show")){
-          track("Info Modal Esc Closed", { outcome: lastOutcome || "unknown" });
+          track("info_modal_esc_close", { outcome: lastOutcome || "unknown" });
           goToStart();
           return;
         }
         if (endModalBackdrop.classList.contains("show")){
-          // Escape on end modal behaves like Close (open info modal)
-          track("End Modal Esc Pressed", { outcome: lastOutcome || "unknown" });
+          track("end_modal_esc", { outcome: lastOutcome || "unknown" });
           closeEndModal();
           openInfoModal(lastOutcome === "success" ? "success" : "fail");
         }
       }
     });
 
-    track("Visited Game");
-
-    /*
-      GIF speed note:
-      Standard web APIs can't reliably slow a remote GIF to 0.75x.
-      If you provide a slowed GIF or an MP4/WebM, we can set playbackRate=0.75 exactly.
-    */
+    // Page visit event (custom)
+    track("visited_game");
   </script>
 </body>
 </html>

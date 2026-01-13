@@ -710,20 +710,19 @@
 
     // ===== Info Modal (after Close) =====
     const INFO_CONTENT = {
-      success: {
-        img: "https://i.postimg.cc/mkg70Pmr/534d480b-edf1-4150-8ac4-82dfd9897aec-removebg-preview.png",
-        line1: "HEY THERE!",
-        line2: "This game was created entirely using ChatGPT.",
-        line3: "Want the prompts + setup guide?"
-      },
-      fail: {
-        img: "https://i.postimg.cc/fbY7XnVP/4023361-removebg-preview.png",
-        line1: "PLOT YOUR REVENGE!",
-        line2: "Challenge your team with a tougher game—made entirely using ChatGPT.",
-        line3: "Want the prompts + setup guide?"
-      }
-    };
-
+  success: {
+    img: "data:image/svg+xml;utf8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20256%20256%22%3E%0A%3Crect%20width=%22256%22%20height=%22256%22%20rx=%2236%22%20fill=%22%23fff%22/%3E%0A%3Crect%20x=%2262%22%20y=%2274%22%20width=%22132%22%20height=%22112%22%20rx=%2228%22%20fill=%22%23fff%22%20stroke=%22%238A6A2C%22%20stroke-width=%226%22/%3E%0A%3Ccircle%20cx=%22104%22%20cy=%22126%22%20r=%2210%22%20fill=%22%23161616%22%20opacity=%22.75%22/%3E%0A%3Ccircle%20cx=%22152%22%20cy=%22126%22%20r=%2210%22%20fill=%22%23161616%22%20opacity=%22.75%22/%3E%0A%3Cpath%20d=%22M104%20156c14%2014%2034%2014%2048%200%22%20fill=%22none%22%20stroke=%22%23161616%22%20stroke-width=%226%22%20stroke-linecap=%22round%22%20opacity=%22.6%22/%3E%0A%3Cpath%20d=%22M128%2050v18%22%20stroke=%22%238A6A2C%22%20stroke-width=%226%22%20stroke-linecap=%22round%22/%3E%0A%3Ccircle%20cx=%22128%22%20cy=%2244%22%20r=%2210%22%20fill=%22%23D2B582%22%20stroke=%22%238A6A2C%22%20stroke-width=%226%22/%3E%0A%3Ctext%20x=%22128%22%20y=%22220%22%20text-anchor=%22middle%22%20font-family=%22system-ui,Segoe%20UI,Roboto%22%20font-size=%2216%22%20font-weight=%22800%22%20fill=%22%238A6A2C%22%3EHEY%20THERE!%3C/text%3E%0A%3C/svg%3E",
+    line1: "HEY THERE!",
+    line2: "This game was created entirely using ChatGPT.",
+    line3: "Want the prompts + setup guide?"
+  },
+  fail: {
+    img: "data:image/svg+xml;utf8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20256%20256%22%3E%0A%3Crect%20width=%22256%22%20height=%22256%22%20rx=%2236%22%20fill=%22%23fff%22/%3E%0A%3Cpath%20d=%22M160%2036l-36%2060h32l-28%2054%22%20fill=%22none%22%20stroke=%22%238A6A2C%22%20stroke-width=%228%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%0A%3Ccircle%20cx=%22112%22%20cy=%22136%22%20r=%2252%22%20fill=%22%23fff%22%20stroke=%22%238A6A2C%22%20stroke-width=%226%22/%3E%0A%3Cpath%20d=%22M92%20132l16-12m40%2012l-16-12%22%20fill=%22none%22%20stroke=%22%23161616%22%20stroke-width=%226%22%20stroke-linecap=%22round%22%20opacity=%22.65%22/%3E%0A%3Cpath%20d=%22M96%20160c16%2018%2032%2018%2048%200%22%20fill=%22none%22%20stroke=%22%23161616%22%20stroke-width=%226%22%20stroke-linecap=%22round%22%20opacity=%22.55%22/%3E%0A%3Ctext%20x=%22128%22%20y=%22220%22%20text-anchor=%22middle%22%20font-family=%22system-ui,Segoe%20UI,Roboto%22%20font-size=%2216%22%20font-weight=%22900%22%20fill=%22%238A6A2C%22%3EPLOT%20YOUR%20REVENGE!%3C/text%3E%0A%3C/svg%3E",
+    line1: "PLOT YOUR REVENGE!",
+    line2: "Challenge your team with a tougher game—made entirely using ChatGPT.",
+    line3: "Want the prompts + setup guide?"
+  }
+};
     function openInfoModal(forOutcome){
       const key = (forOutcome === "success") ? "success" : "fail";
       const c = INFO_CONTENT[key];
@@ -953,3 +952,4 @@
   </script>
 </body>
 </html>
+

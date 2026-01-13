@@ -12,7 +12,7 @@
     function gtag(){ dataLayer.push(arguments); }
     gtag('js', new Date());
 
-    // Keep this. DebugView will work best with GA Debugger extension (steps below).
+    // DebugView works best with GA Debugger extension (steps below).
     gtag('config', 'G-PG5KL2468P', { debug_mode: true });
   </script>
 
@@ -258,12 +258,14 @@
       text-align: center;
     }
 
-    /* ===== GIF overlay (only time we darken) ===== */
+    /* ===== WIN GIF OVERLAY =====
+       Move behind modals so modals always show above it.
+    */
     .win-overlay{
       position: fixed;
       inset: 0;
       display: none;
-      z-index: 20;
+      z-index: 5; /* was 20 */
       background:
         linear-gradient(rgba(0,0,0,.70), rgba(0,0,0,.70)),
         var(--bg-win-gif) center/cover no-repeat;
@@ -280,7 +282,7 @@
       align-items: center;
       justify-content: center;
       background: rgba(0,0,0,.35);
-      z-index: 30;
+      z-index: 50; /* was 30 */
       padding: 18px;
     }
     .modal-backdrop.show{ display: flex; }
@@ -502,8 +504,54 @@
       } catch (e) {}
     }
 
-    // Send a "page_view" style event for your single-page app visit (optional but useful).
     track("page_view", { page_title: "Categories Game", page_location: window.location.href });
+
+    // ===== Inline fallback images (works even if postimg is blocked) =====
+    function svgDataUrl(svg) {
+      return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+    }
+
+    const FALLBACK_IMAGES = {
+      success: svgDataUrl(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="420" height="260" viewBox="0 0 420 260">
+          <rect width="420" height="260" rx="28" fill="#F6F2EA"/>
+          <circle cx="210" cy="118" r="56" fill="#D2B582"/>
+          <text x="210" y="205" text-anchor="middle"
+                font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700"
+                fill="#6F521F" letter-spacing="2">
+            HEY THERE!
+          </text>
+        </svg>
+      `),
+      fail: svgDataUrl(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="420" height="260" viewBox="0 0 420 260">
+          <rect width="420" height="260" rx="28" fill="#F6F2EA"/>
+          <path d="M210 62 L264 160 H156 Z" fill="#D2B582"/>
+          <text x="210" y="205" text-anchor="middle"
+                font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="800"
+                fill="#6F521F" letter-spacing="2">
+            PLOT YOUR REVENGE!
+          </text>
+        </svg>
+      `)
+    };
+
+    function setInfoImageWithFallback(primaryUrl, fallbackUrl, altText) {
+      infoImage.onerror = null;
+      infoImage.onload = null;
+
+      infoImage.style.display = "block";
+      infoImage.alt = altText || "";
+
+      // First try primary (postimg)
+      infoImage.onerror = () => {
+        // Fallback to inline SVG (always available)
+        infoImage.onerror = null; // avoid loops
+        infoImage.src = fallbackUrl;
+      };
+
+      infoImage.src = primaryUrl;
+    }
 
     // ===== Category bank =====
     const BANK = [
@@ -710,25 +758,32 @@
 
     // ===== Info Modal (after Close) =====
     const INFO_CONTENT = {
-  success: {
-    img: "data:image/svg+xml;utf8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20256%20256%22%3E%0A%3Crect%20width=%22256%22%20height=%22256%22%20rx=%2236%22%20fill=%22%23fff%22/%3E%0A%3Crect%20x=%2262%22%20y=%2274%22%20width=%22132%22%20height=%22112%22%20rx=%2228%22%20fill=%22%23fff%22%20stroke=%22%238A6A2C%22%20stroke-width=%226%22/%3E%0A%3Ccircle%20cx=%22104%22%20cy=%22126%22%20r=%2210%22%20fill=%22%23161616%22%20opacity=%22.75%22/%3E%0A%3Ccircle%20cx=%22152%22%20cy=%22126%22%20r=%2210%22%20fill=%22%23161616%22%20opacity=%22.75%22/%3E%0A%3Cpath%20d=%22M104%20156c14%2014%2034%2014%2048%200%22%20fill=%22none%22%20stroke=%22%23161616%22%20stroke-width=%226%22%20stroke-linecap=%22round%22%20opacity=%22.6%22/%3E%0A%3Cpath%20d=%22M128%2050v18%22%20stroke=%22%238A6A2C%22%20stroke-width=%226%22%20stroke-linecap=%22round%22/%3E%0A%3Ccircle%20cx=%22128%22%20cy=%2244%22%20r=%2210%22%20fill=%22%23D2B582%22%20stroke=%22%238A6A2C%22%20stroke-width=%226%22/%3E%0A%3Ctext%20x=%22128%22%20y=%22220%22%20text-anchor=%22middle%22%20font-family=%22system-ui,Segoe%20UI,Roboto%22%20font-size=%2216%22%20font-weight=%22800%22%20fill=%22%238A6A2C%22%3EHEY%20THERE!%3C/text%3E%0A%3C/svg%3E",
-    line1: "HEY THERE!",
-    line2: "This game was created entirely using ChatGPT.",
-    line3: "Want the prompts + setup guide?"
-  },
-  fail: {
-    img: "data:image/svg+xml;utf8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20256%20256%22%3E%0A%3Crect%20width=%22256%22%20height=%22256%22%20rx=%2236%22%20fill=%22%23fff%22/%3E%0A%3Cpath%20d=%22M160%2036l-36%2060h32l-28%2054%22%20fill=%22none%22%20stroke=%22%238A6A2C%22%20stroke-width=%228%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%0A%3Ccircle%20cx=%22112%22%20cy=%22136%22%20r=%2252%22%20fill=%22%23fff%22%20stroke=%22%238A6A2C%22%20stroke-width=%226%22/%3E%0A%3Cpath%20d=%22M92%20132l16-12m40%2012l-16-12%22%20fill=%22none%22%20stroke=%22%23161616%22%20stroke-width=%226%22%20stroke-linecap=%22round%22%20opacity=%22.65%22/%3E%0A%3Cpath%20d=%22M96%20160c16%2018%2032%2018%2048%200%22%20fill=%22none%22%20stroke=%22%23161616%22%20stroke-width=%226%22%20stroke-linecap=%22round%22%20opacity=%22.55%22/%3E%0A%3Ctext%20x=%22128%22%20y=%22220%22%20text-anchor=%22middle%22%20font-family=%22system-ui,Segoe%20UI,Roboto%22%20font-size=%2216%22%20font-weight=%22900%22%20fill=%22%238A6A2C%22%3EPLOT%20YOUR%20REVENGE!%3C/text%3E%0A%3C/svg%3E",
-    line1: "PLOT YOUR REVENGE!",
-    line2: "Challenge your team with a tougher game—made entirely using ChatGPT.",
-    line3: "Want the prompts + setup guide?"
-  }
-};
+      success: {
+        img: "https://i.postimg.cc/mkg70Pmr/534d480b-edf1-4150-8ac4-82dfd9897aec-removebg-preview.png",
+        fallback: FALLBACK_IMAGES.success,
+        line1: "HEY THERE!",
+        line2: "This game was created entirely using ChatGPT.",
+        line3: "Want the prompts + setup guide?"
+      },
+      fail: {
+        img: "https://i.postimg.cc/fbY7XnVP/4023361-removebg-preview.png",
+        fallback: FALLBACK_IMAGES.fail,
+        line1: "PLOT YOUR REVENGE!",
+        line2: "Challenge your team with a tougher game—made entirely using ChatGPT.",
+        line3: "Want the prompts + setup guide?"
+      }
+    };
+
     function openInfoModal(forOutcome){
       const key = (forOutcome === "success") ? "success" : "fail";
       const c = INFO_CONTENT[key];
 
-      infoImage.src = c.img;
-      infoImage.alt = key === "success" ? "ChatGPT game note" : "Revenge note";
+      setInfoImageWithFallback(
+        c.img,
+        c.fallback,
+        key === "success" ? "ChatGPT game note" : "Revenge note"
+      );
+
       infoLine1.textContent = c.line1;
       infoLine2.textContent = c.line2;
       infoLine3.textContent = c.line3;
@@ -884,9 +939,7 @@
 
     // ===== Wire events =====
     playBtn.addEventListener("click", () => { goToRules(); });
-
     backToStartBtn.addEventListener("click", () => { backToStart(); });
-
     startGameBtn.addEventListener("click", () => { startGame(); });
 
     submitBtn.addEventListener("click", handleSubmit);
@@ -895,13 +948,11 @@
     // ✅ Event 4: Visit manual (Make My Own Game)
     makeMyOwnBtn.addEventListener("click", () => {
       track("manual_visit", { source: "make_my_own_game", outcome: lastOutcome || "unknown" });
-      // navigation handled by <a>
     });
 
     // ✅ Event 4: Visit manual (Checkout manual)
     checkoutManualBtn.addEventListener("click", () => {
       track("manual_visit", { source: "checkout_manual", outcome: lastOutcome || "unknown" });
-      // navigation handled by <a>
     });
 
     // End modal actions
@@ -942,14 +993,6 @@
         }
       }
     });
-
-    /*
-      GIF note:
-      The win GIF is applied as a CSS background. It should appear when you win.
-      If you still don't see it, it's usually because the GIF URL is blocked by the network
-      OR the overlay is never being shown (i.e., success path not hit).
-    */
   </script>
 </body>
 </html>
-

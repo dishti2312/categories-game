@@ -5,15 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Categories</title>
 
-  <!-- Google tag (gtag.js) -->
+  <!-- Google tag (gtag.js) - GA4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-PG5KL2468P"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){ window.dataLayer.push(arguments); }
+    function gtag(){ dataLayer.push(arguments); }
     gtag('js', new Date());
 
-    // Turn on debug_mode temporarily if you want to see events in GA4 DebugView immediately.
-    // Remove debug_mode once validated.
+    // Keep this. DebugView will work best with GA Debugger extension (steps below).
     gtag('config', 'G-PG5KL2468P', { debug_mode: true });
   </script>
 
@@ -494,25 +493,17 @@
   </div>
 
   <script>
-    // ===== GA4 tracking wrapper (replaces Plausible) =====
-    // GA4 event names cannot contain spaces or punctuation.
-    function toEventName(name){
-      return String(name || "")
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9_ ]/g, "")  // strip punctuation
-        .replace(/\s+/g, "_")         // spaces -> underscores
-        .replace(/^[^a-z]+/, "e_")    // must start with a letter
-        .slice(0, 40);
+    // ===== GA4 event helper =====
+    function track(eventName, params = {}) {
+      try {
+        if (typeof window.gtag === "function") {
+          window.gtag("event", eventName, params);
+        }
+      } catch (e) {}
     }
 
-    function track(name, params){
-      try{
-        if (typeof window.gtag === "function"){
-          window.gtag("event", toEventName(name), params || {});
-        }
-      } catch(e){}
-    }
+    // Send a "page_view" style event for your single-page app visit (optional but useful).
+    track("page_view", { page_title: "Categories Game", page_location: window.location.href });
 
     // ===== Category bank =====
     const BANK = [
@@ -580,6 +571,8 @@
       { category: "Transporters", words: ["Courier", "Pilot", "Captain", "Engineer", "Operator"] },
       { category: "Hobbies", words: ["Photography", "Blogging", "Cycling", "Gardening", "Chess"] }
     ];
+
+    const RANK_BY_X = { 4:"PRODIGY", 3:"GENIUS", 2:"WIZARD", 1:"DETECTIVE", 0:"MASTER" };
 
     // ===== DOM =====
     const startScreen = document.getElementById("startScreen");
@@ -708,7 +701,6 @@
       endModalSubtitle.textContent = subtitle;
       endModalBackdrop.classList.add("show");
       endModalBackdrop.setAttribute("aria-hidden", "false");
-      track("end_modal_opened", { outcome: outcome || "unknown" });
     }
 
     function closeEndModal(){
@@ -744,7 +736,6 @@
 
       infoModalBackdrop.classList.add("show");
       infoModalBackdrop.setAttribute("aria-hidden", "false");
-      track("info_modal_opened", { outcome: key });
     }
 
     function closeInfoModal(){
@@ -779,7 +770,6 @@
       startScreen.classList.add("hidden");
       gameScreen.classList.add("hidden");
       rulesScreen.classList.remove("hidden");
-      track("rules_viewed");
     }
 
     function goToStart(){
@@ -795,15 +785,12 @@
       lastOutcome = null;
       guessInput.value = "";
       banner.classList.remove("show");
-
-      track("returned_to_start");
     }
 
     function backToStart(){
       rulesScreen.classList.add("hidden");
       gameScreen.classList.add("hidden");
       startScreen.classList.remove("hidden");
-      track("start_viewed");
     }
 
     function startGame(){
@@ -821,7 +808,8 @@
       guessInput.value = "";
       guessInput.focus();
 
-      track("game_started", { category: session.category });
+      // ✅ Event 1: Game Start
+      track("game_start", { category: session.category });
     }
 
     function resetGameNewCategory(){
@@ -835,7 +823,8 @@
       guessInput.value = "";
       guessInput.focus();
 
-      track("play_again_clicked", { category: session.category });
+      // Treat Play Again as another start
+      track("game_start", { category: session.category, restart: true });
     }
 
     // ===== Gameplay =====
@@ -846,22 +835,30 @@
       if (!guess){ guessInput.focus(); return; }
 
       const answer = normalizeCategory(session.category);
-      track("guess_submitted", { tile: String(session.revealedCount), guess });
 
       if (guess === answer){
         session.solved = true;
         const xLeft = 5 - session.revealedCount;
-        const rank = ({4:"PRODIGY",3:"GENIUS",2:"WIZARD",1:"DETECTIVE",0:"MASTER"}[xLeft]) || "MASTER";
+        const rank = RANK_BY_X[xLeft] || "MASTER";
         guessInput.blur();
 
-        track("game_complete_success", { category: session.category, guesses_used: String(session.revealedCount) });
+        // ✅ Event 2: Game Success
+        track("game_success", {
+          guesses_used: session.revealedCount,
+          guesses_left: xLeft
+        });
+
+        // ✅ Event 3: Game Complete (success)
+        track("game_complete", {
+          result: "success",
+          guesses_used: session.revealedCount
+        });
 
         showWinOverlayAndEndModal(rank, xLeft);
         return;
       }
 
       showBanner();
-      track("guess_wrong", { tile: String(session.revealedCount) });
 
       if (session.revealedCount < 5){
         session.revealedCount += 1;
@@ -870,7 +867,13 @@
         guessInput.focus();
       } else {
         guessInput.blur();
-        track("game_complete_fail", { category: session.category });
+
+        // ✅ Event 3: Game Complete (fail)
+        track("game_complete", {
+          result: "fail",
+          category: session.category,
+          guesses_used: session.revealedCount
+        });
 
         openEndModal({
           title: "BETTER LUCK NEXT TIME!",
@@ -881,44 +884,42 @@
     }
 
     // ===== Wire events =====
-    playBtn.addEventListener("click", () => { track("play_clicked"); goToRules(); });
-    backToStartBtn.addEventListener("click", () => { track("back_clicked"); backToStart(); });
-    startGameBtn.addEventListener("click", () => { track("start_clicked"); startGame(); });
+    playBtn.addEventListener("click", () => { goToRules(); });
+
+    backToStartBtn.addEventListener("click", () => { backToStart(); });
+
+    startGameBtn.addEventListener("click", () => { startGame(); });
 
     submitBtn.addEventListener("click", handleSubmit);
     guessInput.addEventListener("keydown", (e) => { if (e.key === "Enter") handleSubmit(); });
 
-    // End modal actions
-    playAgainBtn.addEventListener("click", () => {
-      track("end_modal_play_again_clicked", { outcome: lastOutcome || "unknown" });
-      resetGameNewCategory();
-    });
-
+    // ✅ Event 4: Visit manual (Make My Own Game)
     makeMyOwnBtn.addEventListener("click", () => {
-      track("make_my_own_game_click", { outcome: lastOutcome || "unknown" });
+      track("manual_visit", { source: "make_my_own_game", outcome: lastOutcome || "unknown" });
       // navigation handled by <a>
     });
 
+    // ✅ Event 4: Visit manual (Checkout manual)
+    checkoutManualBtn.addEventListener("click", () => {
+      track("manual_visit", { source: "checkout_manual", outcome: lastOutcome || "unknown" });
+      // navigation handled by <a>
+    });
+
+    // End modal actions
+    playAgainBtn.addEventListener("click", () => { resetGameNewCategory(); });
+
+    // Close -> open Info modal (different for success vs fail)
     closeBtn.addEventListener("click", () => {
-      track("end_modal_close_clicked", { outcome: lastOutcome || "unknown" });
       closeEndModal();
       openInfoModal(lastOutcome === "success" ? "success" : "fail");
     });
 
-    checkoutManualBtn.addEventListener("click", () => {
-      track("checkout_manual_click", { outcome: lastOutcome || "unknown" });
-      // navigation handled by <a>
-    });
-
-    noThanksBtn.addEventListener("click", () => {
-      track("no_thanks_click", { outcome: lastOutcome || "unknown" });
-      goToStart();
-    });
+    // "No, not for me" returns to START screen
+    noThanksBtn.addEventListener("click", () => { goToStart(); });
 
     // Clicking backdrops
     endModalBackdrop.addEventListener("click", (e) => {
       if (e.target === endModalBackdrop){
-        track("end_modal_backdrop_click", { outcome: lastOutcome || "unknown" });
         closeEndModal();
         openInfoModal(lastOutcome === "success" ? "success" : "fail");
       }
@@ -926,7 +927,6 @@
 
     infoModalBackdrop.addEventListener("click", (e) => {
       if (e.target === infoModalBackdrop){
-        track("info_modal_backdrop_close", { outcome: lastOutcome || "unknown" });
         goToStart();
       }
     });
@@ -934,20 +934,22 @@
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape"){
         if (infoModalBackdrop.classList.contains("show")){
-          track("info_modal_esc_close", { outcome: lastOutcome || "unknown" });
           goToStart();
           return;
         }
         if (endModalBackdrop.classList.contains("show")){
-          track("end_modal_esc", { outcome: lastOutcome || "unknown" });
           closeEndModal();
           openInfoModal(lastOutcome === "success" ? "success" : "fail");
         }
       }
     });
 
-    // Page visit event (custom)
-    track("visited_game");
+    /*
+      GIF note:
+      The win GIF is applied as a CSS background. It should appear when you win.
+      If you still don't see it, it's usually because the GIF URL is blocked by the network
+      OR the overlay is never being shown (i.e., success path not hit).
+    */
   </script>
 </body>
 </html>
